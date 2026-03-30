@@ -4,6 +4,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
+import { MulterModule } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -19,6 +21,7 @@ import { WebhookModule } from './webhook/webhook.module';
 import { NotificationModule } from './notification/notification.module';
 import { QueueModule } from './queue/queue.module';
 import { StellarSyncModule } from './stellar-sync/stellar-sync.module';
+import { ExchangeRatesModule } from './exchange-rates/exchange-rates.module';
 
 import databaseConfig from './database/database.config';
 import stellarConfig from './stellar/config/stellar.config';
@@ -32,6 +35,9 @@ import {
   getRateLimitSettings,
 } from './common/rate-limit/rate-limit.config';
 import { TestController } from './test/test.controller';
+import { UploadModule } from './upload/upload.module';
+import { AuthModule } from './auth/auth.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -63,6 +69,18 @@ import { TestController } from './test/test.controller';
         createThrottlerOptions(getRateLimitSettings(), storageService),
     }),
 
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 100,
+      },
+    ]),
+    MulterModule.register({
+      storage: memoryStorage(),
+      limits: {
+        fileSize: 5 * 1024 * 1024,
+      },
+    }),
     AppCacheModule,
     MetricsModule,
     SentimentModule,
@@ -71,8 +89,12 @@ import { TestController } from './test/test.controller';
     PriceModule,
     NotificationModule,
     WebhookModule,
+    UploadModule,
+    AuthModule,
+    UsersModule,
     QueueModule,
     StellarSyncModule,
+    ExchangeRatesModule,
   ],
   controllers: [AppController, TestController, TestExceptionController],
   providers: [
